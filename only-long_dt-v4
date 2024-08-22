@@ -89,13 +89,13 @@ p2 = plot(leadLine2, color=color.red, title="Ichimoku Lead 2")
 fill(p1, p2, title = "Ichimoku Background", color = leadLine1 > leadLine2 ? color.green : color.red)
 
 //---------------------------------------------
-// JOHN DOE ALGORITHM CONFIGURATION
+// EMA CONFIGURATION
 //---------------------------------------------
-JohnDoe_MA_Length = input(20, title="John Doe MA Length")
-JohnDoe_MA = ema(close, JohnDoe_MA_Length)
+EMA_Length = input(20, title="EMA Length")
+EMA = ema(close, EMA)
 
-longCondition_JohnDoe = crossover(close, JohnDoe_MA)
-shortCondition_JohnDoe = crossunder(close, JohnDoe_MA)
+longCondition_EMA = crossover(close, EMA)
+shortCondition_EMA = crossunder(close, EMA)
 
 //---------------------------------------------
 // COMBINED STRATEGY LOGIC
@@ -103,8 +103,8 @@ shortCondition_JohnDoe = crossunder(close, JohnDoe_MA)
 var bool longCondition = na
 var bool shortCondition = na
 
-longCondition := crossover(RMI(RMI_len, mom), RMI_os) and (DIPlus < DIMinus and ADX > th) and (RSI(RSI_len) < RSI_obos) and (leadLine1 > leadLine2) and longCondition_JohnDoe
-shortCondition := crossunder(RMI(RMI_len, mom), RMI_ob) and (DIPlus > DIMinus and ADX > th) and (RSI(RSI_len) > RSI_obos) and (leadLine1 < leadLine2) and shortCondition_JohnDoe
+longCondition := crossover(RMI(RMI_len, mom), RMI_os) and (DIPlus < DIMinus and ADX > th) and (RSI(RSI_len) < RSI_obos) and (leadLine1 > leadLine2) and longCondition_EMA
+shortCondition := crossunder(RMI(RMI_len, mom), RMI_ob) and (DIPlus > DIMinus and ADX > th) and (RSI(RSI_len) > RSI_obos) and (leadLine1 < leadLine2) and shortCondition_EMA
 
 //---------------------------------------------
 // TRACKING LAST LONG ENTRY
