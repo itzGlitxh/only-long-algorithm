@@ -89,13 +89,13 @@ p2 = plot(leadLine2, color=color.new(color.red, 0), title='Ichimoku Lead 2')
 fill(p1, p2, title='Ichimoku Background', color=leadLine1 > leadLine2 ? color.green : color.red, transp=90)
 
 //---------------------------------------------
-// JOHN DOE ALGORITHM CONFIGURATION
+// EMA CONFIGURATION
 //---------------------------------------------
-JohnDoe_MA_Length = input(20, title='John Doe MA Length')
-JohnDoe_MA = ta.ema(close, JohnDoe_MA_Length)
+EMA_Length = input(20, title='EMA Length')
+EMA = ta.ema(close, JohnDoe_MA_Length)
 
-longCondition_JohnDoe = ta.crossover(close, JohnDoe_MA)
-shortCondition_JohnDoe = ta.crossunder(close, JohnDoe_MA)
+longCondition_EMA = ta.crossover(close, EMA)
+shortCondition_EMA = ta.crossunder(close, EMA)
 
 //---------------------------------------------
 // COMBINED STRATEGY LOGIC
