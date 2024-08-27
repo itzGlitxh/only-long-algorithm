@@ -92,7 +92,7 @@ fill(p1, p2, title = "Ichimoku Background", color = leadLine1 > leadLine2 ? colo
 // EMA CONFIGURATION
 //---------------------------------------------
 EMA_Length = input(20, title="EMA Length")
-EMA = ema(close, EMA)
+EMA = ema(close, EMA_Length)
 
 longCondition_EMA = crossover(close, EMA)
 shortCondition_EMA = crossunder(close, EMA)
