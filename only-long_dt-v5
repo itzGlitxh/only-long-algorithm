@@ -92,7 +92,7 @@ fill(p1, p2, title='Ichimoku Background', color=leadLine1 > leadLine2 ? color.gr
 // EMA CONFIGURATION
 //---------------------------------------------
 EMA_Length = input(20, title='EMA Length')
-EMA = ta.ema(close, JohnDoe_MA_Length)
+EMA = ta.ema(close, EMA Length)
 
 longCondition_EMA = ta.crossover(close, EMA)
 shortCondition_EMA = ta.crossunder(close, EMA)
@@ -103,8 +103,8 @@ shortCondition_EMA = ta.crossunder(close, EMA)
 var bool longCondition = na
 var bool shortCondition = na
 
-longCondition := ta.crossover(RMI(RMI_len, mom), RMI_os) and DIPlus < DIMinus and ADX > th and RSI(RSI_len) < RSI_obos and leadLine1 > leadLine2 and longCondition_JohnDoe
-shortCondition := ta.crossunder(RMI(RMI_len, mom), RMI_ob) and DIPlus > DIMinus and ADX > th and RSI(RSI_len) > RSI_obos and leadLine1 < leadLine2 and shortCondition_JohnDoe
+longCondition := ta.crossover(RMI(RMI_len, mom), RMI_os) and DIPlus < DIMinus and ADX > th and RSI(RSI_len) < RSI_obos and leadLine1 > leadLine2 and longCondition_EMA
+shortCondition := ta.crossunder(RMI(RMI_len, mom), RMI_ob) and DIPlus > DIMinus and ADX > th and RSI(RSI_len) > RSI_obos and leadLine1 < leadLine2 and shortCondition_EMA
 
 //---------------------------------------------
 // TRACKING LAST LONG ENTRY
