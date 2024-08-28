@@ -1,0 +1,118 @@
+//@version=5
+strategy(title='ONLY-LONG [Options]', overlay=true, initial_capital=10000, pyramiding=1, calc_on_order_fills=false, calc_on_every_tick=false, default_qty_type=strategy.fixed, default_qty_value=50, commission_value=1.32, commission_type=strategy.commission.cash_per_order)
+
+//---------------------------------------------
+// STRATEGY OVERVIEW
+//---------------------------------------------
+// This script is designed for trading call options, focusing solely on long positions.
+// It uses a combination of RMI, ADX, RSI, Ichimoku, and EMA indicators for entry signals.
+// The strategy is optimized for short time frames, capturing quick bullish movements.
+// It enters long positions during favorable conditions and exits based on a time-adjusted take-profit target.
+
+//---------------------------------------------
+// ONLY-LONG STRATEGY CONFIGURATION
+//---------------------------------------------
+RMI_len = input.int(24, title='RMI LENGTH', minval=1)
+mom = input.int(5, title='RMI MOMENTUM', minval=1)
+RMI_ob = input.int(70, title='RMI OVERBOUGHT', minval=0)
+RMI_os = input.int(30, title='RMI OVERSOLD', minval=0)
+
+ADX_len = input.int(88, title='ADX LENGTH', minval=1)
+th = input.int(3, title='ADX THRESHOLD', minval=0)
+
+RSI_len = input.int(55, 'RSI LENGTH', minval=1)
+RSI_obos = input.int(52, title='RSI BULLISH/BEARISH', minval=1)
+
+conversionPeriods = input.int(21, minval=1, title='ICHIMOKU CONVERSION LINE')
+basePeriods = input.int(55, minval=1, title='ICHIMOKU BASE LINE')
+laggingSpan2Periods = input.int(96, minval=1, title='ICHIMOKU LAGGING SPAN 2')
+
+tp = input.float(1.3, 'TAKE PROFIT ($)', minval=0, step=0.3)
+
+//---------------------------------------------
+// CALCULATE RMI, ADX, RSI, AND ICHIMOKU
+//---------------------------------------------
+RMI(len, m) =>
+    up = ta.ema(math.max(close - close[m], 0), len)
+    dn = ta.ema(math.max(close[m] - close, 0), len)
+    RMI = dn == 0 ? 0 : 100 - 100 / (1 + up / dn)
+    RMI
+
+calcADX(len) =>
+    var float SmoothedTrueRange = 0.0
+    var float SmoothedDirectionalMovementPlus = 0.0
+    var float SmoothedDirectionalMovementMinus = 0.0
+    TrueRange = math.max(math.max(high - low, math.abs(high - nz(close[1]))), math.abs(low - nz(close[1])))
+    DirectionalMovementPlus = high - nz(high[1]) > nz(low[1]) - low ? math.max(high - nz(high[1]), 0) : 0
+    DirectionalMovementMinus = nz(low[1]) - low > high - nz(high[1]) ? math.max(nz(low[1]) - low, 0) : 0
+    SmoothedTrueRange := nz(SmoothedTrueRange[1]) - nz(SmoothedTrueRange[1]) / len + TrueRange
+    SmoothedDirectionalMovementPlus := nz(SmoothedDirectionalMovementPlus[1]) - nz(SmoothedDirectionalMovementPlus[1]) / len + DirectionalMovementPlus
+    SmoothedDirectionalMovementMinus := nz(SmoothedDirectionalMovementMinus[1]) - nz(SmoothedDirectionalMovementMinus[1]) / len + DirectionalMovementMinus
+    DIP = SmoothedDirectionalMovementPlus / SmoothedTrueRange * 100
+    DIM = SmoothedDirectionalMovementMinus / SmoothedTrueRange * 100
+    DX = math.abs(DIP - DIM) / (DIP + DIM) * 100
+    adx = ta.sma(DX, len)
+    [DIP, DIM, adx]
+
+[DIPlus, DIMinus, ADX] = calcADX(ADX_len)
+
+macol = DIPlus > DIMinus and ADX > th ? color.lime : DIPlus < DIMinus and ADX > th ? color.red : color.orange
+
+barcolor(color=macol, title='ADX')
+
+RSI(len) =>
+    up_rsi = ta.rma(math.max(ta.change(close), 0), len)
+    down_rsi = ta.rma(-math.min(ta.change(close), 0), len)
+    rsi = down_rsi == 0 ? 100 : up_rsi == 0 ? 0 : 100 - 100 / (1 + up_rsi / down_rsi)
+    rsi
+
+indexHighTF = barstate.isrealtime ? 1 : 0
+indexCurrTF = barstate.isrealtime ? 0 : 1
+
+ichimoku_close = request.security(syminfo.tickerid, 'D', close[indexHighTF], lookahead=barmerge.lookahead_off)
+ichimoku_close_curr = ichimoku_close[indexCurrTF]
+
+donchian(len) =>
+    math.avg(ta.lowest(len), ta.highest(len))
+
+conversionLine = donchian(conversionPeriods)
+baseLine = donchian(basePeriods)
+
+leadLine1 = math.avg(conversionLine, baseLine)
+leadLine2 = donchian(laggingSpan2Periods)
+
+p1 = plot(leadLine1, color=color.new(color.green, 0), title='Ichimoku Lead 1')
+p2 = plot(leadLine2, color=color.new(color.red, 0), title='Ichimoku Lead 2')
+
+fill(p1, p2, title='Ichimoku Background', color=leadLine1 > leadLine2 ? color.green : color.red, transp=90)
+
+//---------------------------------------------
+// EMA CONFIGURATION
+//---------------------------------------------
+EMA_Length = input(20, title='EMA Length')
+EMA = ta.ema(close, EMA_Length)
+
+longCondition_EMA = ta.crossover(close, EMA)
+
+//---------------------------------------------
+// COMBINED STRATEGY LOGIC
+//---------------------------------------------
+var bool longCondition = na
+var bool shortCondition = na
+
+longCondition := ta.crossover(RMI(RMI_len, mom), RMI_os) and DIPlus < DIMinus and ADX > th and RSI(RSI_len) < RSI_obos and leadLine1 > leadLine2 and longCondition_EMA and hour < 15
+
+//---------------------------------------------
+// TRACKING LAST LONG ENTRY
+//---------------------------------------------
+var float last_open_longCondition = na
+last_open_longCondition := longCondition ? close : nz(last_open_longCondition[1])
+
+var int last_longCondition = 0
+last_longCondition := longCondition ? time : nz(last_longCondition[1])
+
+//---------------------------------------------
+// STRATEGY EXECUTION
+//---------------------------------------------
+strategy.entry('Call', strategy.long, when=longCondition)
+strategy.exit('Close Call', from_entry='Call', limit=last_open_longCondition + tp + 1.6*(dayofweek(time)-dayofweek(last_longCondition)))
