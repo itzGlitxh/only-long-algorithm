@@ -114,5 +114,5 @@ last_longCondition := longCondition ? time : nz(last_longCondition[1])
 //---------------------------------------------
 // STRATEGY EXECUTION
 //---------------------------------------------
-strategy.entry('Call', strategy.long, when=longCondition)
-strategy.exit('Close Call', from_entry='Call', limit=last_open_longCondition + tp + 1.6*(dayofweek(time)-dayofweek(last_longCondition)))
+strategy.entry('Buy Call', strategy.long, when=longCondition)
+strategy.exit('Sell Call', from_entry='Buy Call', limit=last_open_longCondition + tp + 1.6*(dayofweek(time)-dayofweek(last_longCondition)))
