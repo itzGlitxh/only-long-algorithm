@@ -1,7 +1,7 @@
-# Only-Long Day Trading Algorithm
+# Only-Long Algorithm
 
 ## Overview
-The Only-Long Day Trading Algorithm is designed for day trading stocks, focusing exclusively on long positions. This strategy utilizes a combination of advanced technical indicators to identify bullish market conditions and execute trades effectively.
+The Only-Long Algorithm is designed for day trading stocks, focusing exclusively on long positions. This strategy utilizes a combination of advanced technical indicators to identify bullish market conditions and execute trades effectively.
 
 ### Strategy Highlights
 - **Indicators Used**:
