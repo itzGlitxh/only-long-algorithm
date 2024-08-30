@@ -100,7 +100,7 @@ longCondition_EMA = ta.crossover(close, EMA)
 var bool longCondition = na
 var bool shortCondition = na
 
-longCondition := ta.crossover(RMI(RMI_len, mom), RMI_os) and DIPlus < DIMinus and ADX > th and RSI(RSI_len) < RSI_obos and leadLine1 > leadLine2 and longCondition_EMA and hour < 15
+longCondition := ta.crossover(RMI(RMI_len, mom), RMI_os) and DIPlus < DIMinus and ADX > th and RSI(RSI_len) < RSI_obos and (leadLine1 >= leadLine2 or leadLine2 >= leadLine1+1.6) and longCondition_EMA and hour < 15
 
 //---------------------------------------------
 // TRACKING LAST LONG ENTRY
