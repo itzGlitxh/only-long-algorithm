@@ -16,6 +16,7 @@ tp = input.float(1.0, 'TAKE PROFIT (%)', minval=0, step=0.025)
     // nvda = 0.725
     // spy = 0.425
     // tsla = 0.25
+    // meta = 0.175
 
 RMI_len = input.int(24, title='RMI LENGTH', minval=1)
 mom = input.int(5, title='RMI MOMENTUM', minval=1)
