@@ -12,9 +12,9 @@ strategy(title='ONLY-LONG [Options]', overlay=true, initial_capital=1000, pyrami
 //---------------------------------------------
 // VARIABLES & INITIALIZATION
 //---------------------------------------------
-tp = input.float(1.0, 'TAKE PROFIT (%)', minval=0, step=0.05)
-    // nvda = 0.7
-    // spy = 0.4
+tp = input.float(1.0, 'TAKE PROFIT (%)', minval=0, step=0.025)
+    // nvda = 0.725
+    // spy = 0.425
     // tsla = 0.25
 
 RMI_len = input.int(24, title='RMI LENGTH', minval=1)
