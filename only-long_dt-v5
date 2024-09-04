@@ -182,29 +182,3 @@ if longCondition or Final_Long_sl
 
 if Final_Long_tp or shortCondition
     strategy.close('Buy')
-
-
-//---------------------------------------------
-// STOCHASTIC OSCILLATOR CONFIGURATION
-//---------------------------------------------
-length = input.int(defval=14, title='Length', group='STOCHASTIC OSCILLATOR')
-dLength = input.int(defval=3, title='D Line Length', group='STOCHASTIC OSCILLATOR')
-upperTrigger = input.int(defval=80, title='Upper Trigger Line', group='STOCHASTIC OSCILLATOR')
-lowerTrigger = input.int(defval=20, title='Lower Trigger Line', group='STOCHASTIC OSCILLATOR')
-
-//---------------------------------------------
-// CALCULATE STOCHASTIC OSCILLATOR
-//---------------------------------------------
-lowVal = ta.lowest(low, length)
-highVal = ta.highest(high, length)
-slowK = (close - lowVal) / (highVal - lowVal) * 100
-fastD = ta.sma(slowK, dLength)
-
-//---------------------------------------------
-// STOCHASTIC OSCILLATOR VISUALIZATION
-//---------------------------------------------
-plot(slowK, color=color.new(color.lime, 0), title='Stochastic %K')
-plot(fastD, color=color.new(color.orange, 0), title='Stochastic %D')
-upperBound = hline(upperTrigger, title='Upper Trigger', linestyle=hline.style_dashed)
-lowerBound = hline(lowerTrigger, title='Lower Trigger', linestyle=hline.style_dashed)
-fill(upperBound, lowerBound, color=color.new(color.purple, 90), title='Stochastic Background')
