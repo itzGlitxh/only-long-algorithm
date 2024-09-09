@@ -1,6 +1,7 @@
 //@version=4
 strategy(title = "ONLY-LONG [NVDA]", overlay = true, initial_capital = 10000, pyramiding = 2,
    calc_on_order_fills = false, calc_on_every_tick = false, default_qty_type = strategy.cash, default_qty_value = 1000, commission_value = 0)
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 
 //---------------------------------------------
 // STRATEGY OVERVIEW
