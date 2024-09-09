@@ -1,5 +1,6 @@
 //@version=5
 strategy(title='ONLY-LONG [Day Trading]', overlay=true, initial_capital=10000, pyramiding=10, calc_on_order_fills=false, calc_on_every_tick=false, default_qty_type=strategy.cash, default_qty_value=1000, commission_value=0.05, commission_type=strategy.commission.cash_per_order)
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 
 //---------------------------------------------
 // STRATEGY OVERVIEW
@@ -29,7 +30,7 @@ basePeriods = input.int(55, minval=1, title='ICHIMOKU BASE LINE')
 laggingSpan2Periods = input.int(96, minval=1, title='ICHIMOKU LAGGING SPAN 2')
 
 sl = input.float(10, 'STOP LOSS %', minval=0, step=0.5)
-tp = input.float(25, 'TAKE PROFIT %', minval=0, step=0.5)
+tp = input.float(20, 'TAKE PROFIT %', minval=0, step=0.5)
 
 //---------------------------------------------
 // CALCULATE RMI, ADX, RSI, AND ICHIMOKU
