@@ -188,30 +188,32 @@ highVal = ta.highest(high, length)
 slowK = (close - lowVal) / (highVal - lowVal) * 100
 fastD = ta.sma(slowK, dLength)
 
+var float tp2 = ((tp - (upperTrigger+lowerTrigger)/200)/2)*100
+
 entry_long_mkt_conditions = (
-     slowK <= 60
-     and fastD <= 60
+     slowK <= (upperTrigger+lowerTrigger)/2 + tp2
+     and fastD <= (upperTrigger+lowerTrigger)/2 + tp2
      and (ta.crossunder(slowK, fastD) 
      or ta.crossover(slowK, fastD))
      ) and barstate.isconfirmed
 
 entry_short_mkt_conditions = (
-     slowK >= 40
-     and fastD >= 40
+     slowK >= (upperTrigger+lowerTrigger)/2 - tp2
+     and fastD >= (upperTrigger+lowerTrigger)/2 - tp2
      and (ta.crossunder(slowK, fastD) 
      or ta.crossover(slowK, fastD))
      ) and barstate.isconfirmed
 
 exit_long_mkt_conditions = (
-     slowK >= upperTrigger+10
-     and fastD >= upperTrigger+10
+     slowK >= upperTrigger+tp2
+     and fastD >= upperTrigger+tp2
      and (ta.crossunder(slowK, fastD) 
      or ta.crossover(slowK, fastD))
      ) and barstate.isconfirmed
 
 exit_short_mkt_conditions = (
-     slowK <= lowerTrigger+5
-     and fastD <= lowerTrigger+5
+     slowK <= lowerTrigger+tp2/2
+     and fastD <= lowerTrigger+tp2/2
      and (ta.crossunder(slowK, fastD) 
      or ta.crossover(slowK, fastD))
      ) and barstate.isconfirmed
@@ -235,7 +237,7 @@ else if dayofweek(last_longCondition) == 5
     else if close >= last_open_longCondition * (1 + tp / 125) + timing * (1 + tp / 100) and (not trend or (hour == 15 and minute >= 45))
         strategy.close('Buy 3 Calls')
 
-else if dayofweek(last_longCondition) == 6 and hour < 13
+else if dayofweek(last_longCondition) == 6 and hour <= 12
     if longCondition
         strategy.entry('Buy 6 Calls', strategy.long)
         entry1 := 1
