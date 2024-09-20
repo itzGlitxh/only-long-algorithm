@@ -23,6 +23,9 @@ The Only-Long Algorithm is designed for day trading stocks, focusing exclusively
 - **Real-Time Alerts**: The script provides real-time entry and exit signals on the TradingView platform.
 - **Visualization**: Includes visual indicators on the chart for better decision-making.
 
+## Options Trading with Trend-Catcher
+In addition to the original Only-Long strategy, we now offer a **Trend-Catcher** option that expands the trading capabilities by incorporating both puts and calls. This new feature leverages trend analysis to make calculated decisions, enabling traders to profit from both bullish and bearish market conditions. With this, you can now take advantage of market trends more effectively, applying advanced logic to manage long and short positions dynamically.
+
 ## Installation
 1. Open TradingView and create a new Pine Script.
 2. Copy and paste the Only-Long algorithm code into the script editor.
