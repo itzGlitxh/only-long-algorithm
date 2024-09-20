@@ -177,7 +177,7 @@ var int last_longCondition = 0
 last_longCondition := longCondition ? time : nz(last_longCondition[1])
 
 //---------------------------------------------
-// STOCHS BY COWWATSON 
+// STOCHS BY COWWATSON (ALTERED BY TP)
 //---------------------------------------------
 length = input.int(defval = 14, title = 'Length', group = "STOCHASTIC OSCILLATOR")
 dLength = input.int(defval = 3, title = 'D Line Length', group = "STOCHASTIC OSCILLATOR")
