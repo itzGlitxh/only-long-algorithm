@@ -237,7 +237,7 @@ else if dayofweek(last_longCondition) == 5
     else if close >= last_open_longCondition * (1 + tp / 125) + timing * (1 + tp / 100) and (not trend or (hour == 15 and minute >= 45))
         strategy.close('Buy 3 Calls')
 
-else if dayofweek(last_longCondition) == 6 and hour <= 12
+else if dayofweek(last_longCondition) == 6 and hour < 12
     if longCondition
         strategy.entry('Buy 6 Calls', strategy.long)
         entry1 := 1
@@ -266,7 +266,7 @@ if (trendSwitch == 1)
 if (not trend or exit_long_mkt_conditions)
     strategy.close('Call')
 
-if (not trend and exit_short_mkt_conditions)
+if (trend or exit_short_mkt_conditions)
     strategy.close('Put')
 
 if (hour == 9 and minute == 40)
