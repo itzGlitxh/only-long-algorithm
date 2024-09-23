@@ -1,6 +1,7 @@
 //@version=5
-strategy(title='ONLY-LONG [Options]', overlay=true, initial_capital=1000, pyramiding=2, calc_on_order_fills=false, calc_on_every_tick=false, default_qty_type=strategy.fixed, default_qty_value=50, commission_value=0.0012, commission_type=strategy.commission.cash_per_contract)
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+
+strategy(title='ONLY-LONG [Options]', overlay=true, initial_capital=1000, pyramiding=2, calc_on_order_fills=false, calc_on_every_tick=false, default_qty_type=strategy.fixed, default_qty_value=50, commission_value=0.0012, commission_type=strategy.commission.cash_per_contract)
 
 //---------------------------------------------
 // STRATEGY OVERVIEW
