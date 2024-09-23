@@ -1,7 +1,7 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 
 //@version=5
-strategy(title='TREND-CATCHER [Options]', overlay=true, initial_capital=1000, pyramiding=1, calc_on_order_fills=false, calc_on_every_tick=false, default_qty_type=strategy.fixed, default_qty_value=32, commission_value=0.0012, commission_type=strategy.commission.cash_per_contract)
+strategy(title='TREND-CATCHER [Options]', overlay=true, initial_capital=1000, pyramiding=1, calc_on_order_fills=false, calc_on_every_tick=false, default_qty_type=strategy.fixed, default_qty_value=28, commission_value=0.06, commission_type=strategy.commission.cash_per_order)
 
 //---------------------------------------------
 // STRATEGY OVERVIEW
@@ -143,12 +143,12 @@ if (hour == 9 and minute == 40)
         entry := 4
 
 if (entry == 3 and entry_long_mkt_conditions and trend and low > Sband + 0.85)
-    strategy.entry('Buy Call', strategy.long, 16 + (dayofweek(time) - 2) * 8)
+    strategy.entry('Buy Call', strategy.long, 14 + (dayofweek(time) - 2) * 7)
     entryPrice := high
     entry := 0
 
 if (entry == 4 and entry_short_mkt_conditions and not trend and high < Sband - 0.85)
-    strategy.entry('Buy Put', strategy.short, 16 + (dayofweek(time) - 2) * 8)
+    strategy.entry('Buy Put', strategy.short, 14 + (dayofweek(time) - 2) * 7)
     entryPrice := low
     entry := 0
 
