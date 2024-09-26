@@ -13,10 +13,7 @@ strategy(title='TREND-CATCHER [Options]', overlay=true, initial_capital=1000, py
 //---------------------------------------------
 // VARIABLES & INITIALIZATION
 //---------------------------------------------
-tp = input.float(1.0, 'TAKE PROFIT (%)', minval=0, step=0.025)
-    // nvda = 0.85
-    // tsla = 0.675
-    // meta = 0.3
+tp = input.float(0.6, 'TAKE PROFIT (%)', minval=0, step=0.025)
 
 float step = input.float(0.15, "Radius Step", step = 0.001)
 float multi = input.float(2, "Start Points Distance", step = 0.1)
@@ -149,7 +146,7 @@ if (entry == 3 and entry_long_mkt_conditions and trend and low > Sband + 0.85)
 
 if (entry == 4 and entry_short_mkt_conditions and not trend and high < Sband - 0.85)
     strategy.entry('Buy Put', strategy.short, 14 + (dayofweek(time) - 2) * 7)
-    entryPrice := low
+    entryPrice := (high + low)/2
     entry := 0
 
 if (not trend or exit_long_mkt_conditions)
