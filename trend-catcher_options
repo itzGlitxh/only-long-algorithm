@@ -133,7 +133,7 @@ if (trendSwitch == 1)
     else
         entry := 2
 
-if (hour == 9 and minute == 40)
+if (hour == 9 and minute == 45)
     if (entry == 1)
         entry := 3
     if (entry == 2)
