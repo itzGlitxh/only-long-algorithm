@@ -124,7 +124,7 @@ exit_short_mkt_conditions = (
 var int entry = 0
 var int exit = 0
 
-time_check = (hour < 10) or (hour == 10 and minute < 30)
+time_check = (hour < 10) or (hour == 10 and minute <= 30)
 no_open_trades = strategy.opentrades == 0
 call_conditions = entry == 3 and entry_long_mkt_conditions and trend and low > Sband + 0.85
 put_conditions = entry == 4 and entry_short_mkt_conditions and not trend and high < Sband - 0.85
