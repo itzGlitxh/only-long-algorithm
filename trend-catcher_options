@@ -124,41 +124,44 @@ exit_short_mkt_conditions = (
 var int entry = 0
 var int exit = 0
 
-if (hour == 9 and minute <= 45)
+time_check = (hour < 10) or (hour == 10 and minute < 30)
+no_open_trades = strategy.opentrades == 0
+call_conditions = entry == 3 and entry_long_mkt_conditions and trend and low > Sband + 0.85
+put_conditions = entry == 4 and entry_short_mkt_conditions and not trend and high < Sband - 0.85
+
+if hour == 9 and minute <= 45
     trendSwitch := 0
 
-if (trendSwitch == 1)
-    if (trend)
+if trendSwitch == 1
+    if trend
         entry := 1
-    else
+    else if not trend
         entry := 2
 
-if (hour == 9 and minute == 45)
-    if (entry == 1)
+if hour == 9 and minute == 45
+    if entry == 1
         entry := 3
-    if (entry == 2)
+    else if entry == 2
         entry := 4
 
-if (entry == 3 and entry_long_mkt_conditions and trend and low > Sband + 0.85)
+if call_conditions and no_open_trades and time_check
     strategy.entry('Buy Call', strategy.long, 14 + (dayofweek(time) - 2) * 7)
-    entryPrice := high
+    entryPrice := (high + low) / 2
     entry := 0
 
-if (entry == 4 and entry_short_mkt_conditions and not trend and high < Sband - 0.85)
+if put_conditions and no_open_trades and time_check
     strategy.entry('Buy Put', strategy.short, 14 + (dayofweek(time) - 2) * 7)
-    entryPrice := (high + low)/2
+    entryPrice := (high + low) / 2
     entry := 0
 
-if (not trend or exit_long_mkt_conditions)
+if not trend or exit_long_mkt_conditions
     exit := 1
 
 if exit == 1
     strategy.exit('Sell Call', 'Buy Call', limit=entryPrice * 1.0099)
-    exit := 0
 
-if (trend or exit_short_mkt_conditions)
+if trend or exit_short_mkt_conditions
     exit := 2
 
 if exit == 2
     strategy.exit('Sell Put', 'Buy Put', limit=entryPrice * 0.9951)
-    exit := 0
