@@ -131,9 +131,9 @@ no_open_trades = strategy.opentrades == 0
 call_conditions = entry == 3 and entry_long_mkt_conditions and trend and low > Sband + 0.85
 put_conditions = entry == 4 and entry_short_mkt_conditions and not trend and high < Sband - 0.85
 
-theta_decay_factor(entry_day, current_day) =>
+theta_decay_factor(entry_day, entryPrice, current_day) =>
     decay_days_passed = current_day - entry_day
-    decay_rate = 0.675/entryPrice
+    decay_rate = 6.75/entryPrice
     theta_decay = 1.0 - math.exp(-decay_rate * decay_days_passed)
     theta_decay
 
@@ -168,12 +168,12 @@ if not trend or exit_long_mkt_conditions
     exit := 1
 
 if exit == 1
-    theta_adjustment = theta_decay_factor(entry_day, dayofweek(time))
+    theta_adjustment = theta_decay_factor(entry_day, entryPrice, dayofweek(time))
     strategy.exit('Sell Call', 'Buy Call', limit=entryPrice * (1.0099 + theta_adjustment))
 
 if trend or exit_short_mkt_conditions
     exit := 2
 
 if exit == 2
-    theta_adjustment = theta_decay_factor(entry_day, dayofweek(time))
+    theta_adjustment = theta_decay_factor(entry_day, entryPrice, dayofweek(time))
     strategy.exit('Sell Put', 'Buy Put', limit=entryPrice * (0.9951 - theta_adjustment))
