@@ -1,0 +1,106 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+
+//@version=5
+strategy(title='LONG-TRADING [3M]', overlay = true, initial_capital = 5000, default_qty_type = strategy.cash, default_qty_value = 5000, pyramiding = 1, commission_value=0.15, commission_type=strategy.commission.cash_per_order)
+
+//---------------------------------------------
+// VARIABLES & INITIALIZATION
+//---------------------------------------------
+float step = input.float(0.05, "Radius Step", step = 0.001)
+float multi = input.float(2.5, "Start Points Distance", step = 0.1)
+
+bool trend = na
+var float multi1 = 0.
+var float multi2 = 0.
+int n = 3
+var float band = 0.
+
+//---------------------------------------------
+// BAND & TREND CALCULATION
+//---------------------------------------------
+float distance  = ta.sma(math.abs(high-low), 100) * multi
+float distance1 = ta.sma(math.abs(high-low), 100) * 0.2
+
+if bar_index == 101
+    trend := true
+    band := low * 0.8
+
+if close < band
+    trend := false
+
+if close > band
+    trend := true
+
+if trend[1] == false and ta.change(trend)
+    band := low - distance
+
+if trend[1] == true and ta.change(trend)
+    band := high + distance
+
+if bar_index % n == 0 and trend
+    multi1 := 0
+    multi2 += step    
+    band += distance1 * multi2
+
+if bar_index % n == 0 and not trend
+    multi1 += step
+    multi2 := 0   
+    band -= distance1 * multi1
+
+Sband = ta.sma(band, n)
+
+color = trend ? #54b6d4 : #cf2b2b
+
+band_upper = ta.sma(band + distance*0.5, n)
+band_lower = ta.sma(band - distance*0.5, n)
+band1 = trend ? band_upper : band_lower
+
+plot(band1, color = bar_index % 2 == 0 ? color.new(chart.fg_color, 50) : na)
+
+plot1 = plot(ta.change(trend) ? na : Sband, style = plot.style_linebr, color = color.gray)
+plot2 = plot(ta.sma(hl2, 20), display = display.none)
+
+fill(plot1, plot2, band, ta.sma(hl2, 20), color.new(color, 60), na)
+
+//---------------------------------------------
+// STOCHS BY COWWATSON
+//---------------------------------------------
+length = input.int(defval = 14, title = 'Length', group = "STOCHASTIC OSCILLATOR")
+dLength = input.int(defval = 3, title = 'D Line Length', group = "STOCHASTIC OSCILLATOR")
+upperTrigger = input.int(defval = 80, title = 'Upper Trigger Line', group = "STOCHASTIC OSCILLATOR")
+lowerTrigger = input.int(defval = 20, title = 'Lower Trigger Line', group = "STOCHASTIC OSCILLATOR")
+lowVal = ta.lowest(low, length)
+highVal = ta.highest(high, length)
+slowK = (close - lowVal) / (highVal - lowVal) * 100
+fastD = ta.sma(slowK, dLength)
+
+entry_long_mkt_conditions = (
+     slowK <= 10
+     and fastD <= 10
+     and (ta.crossunder(slowK, fastD) 
+     or ta.crossover(slowK, fastD))
+     ) and barstate.isconfirmed
+
+exit_long_mkt_conditions = (
+     slowK >= 80
+     and fastD >= 80
+     and (ta.crossunder(slowK, fastD) 
+     or ta.crossover(slowK, fastD))
+     ) and barstate.isconfirmed
+
+//---------------------------------------------
+// STRATEGY EXECUTION
+//---------------------------------------------
+var float entryPrice = 0
+var int exit = 0
+
+if entry_long_mkt_conditions and color == #cf2b2b
+    strategy.entry("L", strategy.long)
+    entryPrice := strategy.position_avg_price
+
+if exit_long_mkt_conditions and color == #54b6d4
+    exit := 1
+
+if exit == 1
+    strategy.exit("CL", "L", limit = entryPrice * 1.0099)
+    exit := 0
