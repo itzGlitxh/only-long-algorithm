@@ -94,7 +94,6 @@ exit_long_mkt_conditions = (
 // STRATEGY EXECUTION
 //---------------------------------------------
 var float entryPrice = na
-var int entry = 0
 var int exit = 0
 var int reentry = 0
 
@@ -114,6 +113,6 @@ if reentry == 1 and trend and not exit_long_mkt_conditions and strategy.opentrad
 if exit_long_mkt_conditions and trend
     exit := 1
 
-if exit == 1
+if exit == 1 and not trend
     strategy.exit("CL", "L1", limit = entryPrice * (1 + tp / 100))
     strategy.exit("CL", "L2", limit = entryPrice * (1 + tp / 100))
