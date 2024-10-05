@@ -1,12 +1,12 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 
 //@version=5
-strategy(title='LONG-TRADING [3M]', overlay = true, initial_capital = 3500, default_qty_type = strategy.cash, default_qty_value = 3500, pyramiding = 1, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
+strategy(title='LONG-TRADING [3M]', overlay = true, initial_capital = 2750, default_qty_type = strategy.cash, default_qty_value = 3500, pyramiding = 1, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
 
 //---------------------------------------------
 // VARIABLES & INITIALIZATION
 //---------------------------------------------
-tp = input.float(0.01, 'TAKE PROFIT (%)', minval=0, step=0.0025)
+tp = input.float(10, 'TAKE PROFIT (%)', minval=0, step=0.25)
 
 float step = input.float(0.05, "Radius Step", step = 0.001)
 float multi = input.float(2.5, "Start Points Distance", step = 0.1)
@@ -93,16 +93,24 @@ exit_long_mkt_conditions = (
 //---------------------------------------------
 // STRATEGY EXECUTION
 //---------------------------------------------
-var float entryPrice = 0
+var float entryPrice = na
+var int entry = 0
 var int exit = 0
+var int reentry = 0
 
-if entry_long_mkt_conditions and color == #cf2b2b
-    strategy.entry("L", strategy.long)
-    entryPrice := strategy.position_avg_price
+if entry_long_mkt_conditions and not trend and strategy.opentrades == 0
+    strategy.entry("L1", strategy.long)
+    entryPrice := (high + low) / 2
+    exit := 0
 
-if exit_long_mkt_conditions and color == #54b6d4
+if close < entryPrice * 0.875 and not exit_long_mkt_conditions and not trend and strategy.opentrades == 1
+    strategy.entry("L2", strategy.long, 750 / ((high + low) / 2))
+    reentry := 0
+    exit := 0
+
+if exit_long_mkt_conditions and trend
     exit := 1
 
 if exit == 1
-    strategy.exit("CL", "L", limit = entryPrice * (1 + tp))
-    exit := 0
+    strategy.exit("CL", "L1", limit = entryPrice * (1 + tp / 100))
+    strategy.exit("CL", "L2", limit = entryPrice * (1 + tp / 100))
