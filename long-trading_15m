@@ -1,7 +1,7 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 
 //@version=5
-strategy(title='LONG-TRADING [3M]', overlay = true, initial_capital = 3250, default_qty_type = strategy.cash, default_qty_value = 3250, pyramiding = 2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
+strategy(title='LONG-TRADING [15m]', overlay = true, initial_capital = 3250, default_qty_type = strategy.cash, default_qty_value = 3250, pyramiding = 2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
 
 //---------------------------------------------
 // VARIABLES & INITIALIZATION
