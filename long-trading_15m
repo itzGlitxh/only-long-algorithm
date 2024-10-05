@@ -6,7 +6,7 @@ strategy(title='LONG-TRADING [15m]', overlay = true, initial_capital = 3000, def
 //---------------------------------------------
 // VARIABLES & INITIALIZATION
 //---------------------------------------------
-tp = input.float(10, 'TAKE PROFIT (%)', minval=0, step=0.25)
+tp = input.float(7.5, 'TAKE PROFIT (%)', minval=0, step=0.25)
 
 float step = input.float(0.05, "Radius Step", step = 0.001)
 float multi = input.float(2.5, "Start Points Distance", step = 0.1)
