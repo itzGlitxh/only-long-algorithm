@@ -168,7 +168,7 @@ if not trend or exit_long_mkt_conditions
 
 if exit == 1 or entryPrice > 300 or entryPrice < 100
     theta_adjustment = theta_decay_factor(entry_day, entryPrice, dayofweek(time))
-    tp_limit = math.min(entryPrice * (1.0074 + theta_adjustment), entryPrice + (2.5 + 5*theta_adjustment))
+    tp_limit = entryPrice * (1 + (0.0099 - entryPrice / 100000) + theta_adjustment)
     strategy.exit('Sell Call', 'Buy Call', limit = tp_limit)
 
 if trend or exit_short_mkt_conditions
@@ -176,5 +176,5 @@ if trend or exit_short_mkt_conditions
 
 if exit == 2 or entryPrice > 300 or entryPrice < 100
     theta_adjustment = theta_decay_factor(entry_day, entryPrice, dayofweek(time))
-    tp_limit = math.max(entryPrice * (0.9951 - theta_adjustment), entryPrice - (1.25 + 5*theta_adjustment))
+    tp_limit = entryPrice * (1 - (0.0099 - entryPrice / 100000) / 2 - theta_adjustment)
     strategy.exit('Sell Put', 'Buy Put', limit = tp_limit)
