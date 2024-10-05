@@ -1,7 +1,7 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 
 //@version=5
-strategy(title='LONG-TRADING [3M]', overlay = true, initial_capital = 2750, default_qty_type = strategy.cash, default_qty_value = 3500, pyramiding = 1, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
+strategy(title='LONG-TRADING [3M]', overlay = true, initial_capital = 3250, default_qty_type = strategy.cash, default_qty_value = 3250, pyramiding = 2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
 
 //---------------------------------------------
 // VARIABLES & INITIALIZATION
@@ -102,10 +102,13 @@ if entry_long_mkt_conditions and not trend and strategy.opentrades == 0
     strategy.entry("L1", strategy.long)
     entryPrice := (high + low) / 2
     exit := 0
-
-if close < entryPrice * 0.875 and not exit_long_mkt_conditions and not trend and strategy.opentrades == 1
-    strategy.entry("L2", strategy.long, 750 / ((high + low) / 2))
     reentry := 0
+
+if close < entryPrice * 0.925
+    reentry := 1
+
+if reentry == 1 and trend and not exit_long_mkt_conditions and strategy.opentrades == 1
+    strategy.entry("L2", strategy.long, 1250 / ((high + low) / 2))
     exit := 0
 
 if exit_long_mkt_conditions and trend
