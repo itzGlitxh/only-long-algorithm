@@ -97,13 +97,16 @@ var float entryPrice = na
 var int exit = 0
 var int reentry = 0
 
+var float tp_factor = (1 + tp / 100)
+var float sl_factor = (1 - tp / 100)
+
 if entry_long_mkt_conditions and not trend and strategy.opentrades == 0
     strategy.entry("L1", strategy.long)
     entryPrice := (high + low) / 2
     exit := 0
     reentry := 0
 
-if close < entryPrice * 0.925
+if close < entryPrice * sl_factor
     reentry := 1
 
 if reentry == 1 and trend and not exit_long_mkt_conditions and strategy.opentrades == 1
@@ -113,6 +116,6 @@ if reentry == 1 and trend and not exit_long_mkt_conditions and strategy.opentrad
 if exit_long_mkt_conditions and trend
     exit := 1
 
-if exit == 1 and not trend
-    strategy.exit("CL", "L1", limit = entryPrice * (1 + tp / 100))
-    strategy.exit("CL", "L2", limit = entryPrice * (1 + tp / 100))
+if exit == 1 and not trend and strategy.opentrades > 0
+    strategy.exit("CL", "L1", limit = entryPrice * tp_factor)
+    strategy.exit("CL", "L2", limit = entryPrice * tp_factor)
