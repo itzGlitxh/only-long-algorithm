@@ -84,8 +84,8 @@ entry_long_mkt_conditions = (
      ) and barstate.isconfirmed
 
 exit_long_mkt_conditions = (
-     slowK >= 80
-     and fastD >= 80
+     slowK >= 90
+     and fastD >= 90
      and (ta.crossunder(slowK, fastD) 
      or ta.crossover(slowK, fastD))
      ) and barstate.isconfirmed
@@ -103,23 +103,25 @@ var int reentry = 0
 
 var float tp_factor = (1 + tp / 100)
 var float sl_factor = (1 - tp / 100)
+var float price_factor = 0
 
 if entry_long_mkt_conditions and not trend and strategy.opentrades == 0
-    strategy.entry("L1", strategy.long, math.round(qty_entry / ((high + low) / 2)))
     entryPrice := (high + low) / 2
+    strategy.entry("L1", strategy.long, math.round(qty_entry / entryPrice))
+    price_factor := (math.pow(10, str.length(str.tostring(math.floor(entryPrice)))) - entryPrice) / 500
     exit := 0
     reentry := 0
 
-if close < entryPrice * sl_factor
+if close < entryPrice * (sl_factor - price_factor / 100)
     reentry := 1
 
 if reentry == 1 and trend and not exit_long_mkt_conditions and strategy.opentrades == 1
-    strategy.entry("L2", strategy.long, math.round(qty_reentry / ((high + low) / 2)))
+    strategy.entry("L2", strategy.long, math.round(qty_reentry / entryPrice))
     exit := 0
 
 if exit_long_mkt_conditions and trend
     exit := 1
 
 if exit == 1 and not trend and strategy.opentrades > 0
-    strategy.exit("CL", "L1", limit = entryPrice * tp_factor)
-    strategy.exit("CL", "L2", limit = entryPrice * tp_factor)
+    strategy.exit("CL", "L1", limit = entryPrice * (tp_factor + price_factor / 100))
+    strategy.exit("CL", "L2", limit = entryPrice * (tp_factor + price_factor / 100))
