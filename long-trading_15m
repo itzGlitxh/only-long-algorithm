@@ -1,7 +1,7 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 
 //@version=5
-strategy(title='LONG-TRADING [15m]', overlay = true, initial_capital = 3000, default_qty_type = strategy.cash, default_qty_value = 3000, pyramiding = 2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
+strategy(title='LONG-TRADING [15m]', overlay = true, initial_capital = 3600, default_qty_type = strategy.cash, default_qty_value = 2100, pyramiding = 2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
 
 //---------------------------------------------
 // VARIABLES & INITIALIZATION
@@ -93,6 +93,10 @@ exit_long_mkt_conditions = (
 //---------------------------------------------
 // STRATEGY EXECUTION
 //---------------------------------------------
+var int qty = 3600
+var int qty_entry = 7 * qty / 12
+var int qty_reentry = 5 * qty / 12
+
 var float entryPrice = na
 var int exit = 0
 var int reentry = 0
@@ -101,7 +105,7 @@ var float tp_factor = (1 + tp / 100)
 var float sl_factor = (1 - tp / 100)
 
 if entry_long_mkt_conditions and not trend and strategy.opentrades == 0
-    strategy.entry("L1", strategy.long)
+    strategy.entry("L1", strategy.long, math.round(qty_entry / ((high + low) / 2)))
     entryPrice := (high + low) / 2
     exit := 0
     reentry := 0
@@ -110,7 +114,7 @@ if close < entryPrice * sl_factor
     reentry := 1
 
 if reentry == 1 and trend and not exit_long_mkt_conditions and strategy.opentrades == 1
-    strategy.entry("L2", strategy.long, 1500 / ((high + low) / 2))
+    strategy.entry("L2", strategy.long, math.round(qty_reentry / ((high + low) / 2)))
     exit := 0
 
 if exit_long_mkt_conditions and trend
