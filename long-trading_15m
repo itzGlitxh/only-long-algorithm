@@ -1,91 +1,92 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 
 //@version=5
-strategy(title='LONG-TRADING [15m]', overlay = true, initial_capital = 3600, default_qty_type = strategy.cash, default_qty_value = 2100, pyramiding = 2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
+strategy(title='LONG-TRADING [15m]', overlay=true, initial_capital=3600, default_qty_type=strategy.cash, default_qty_value=3600, pyramiding=2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
 
 //---------------------------------------------
 // VARIABLES & INITIALIZATION
 //---------------------------------------------
 tp = input.float(7.5, 'TAKE PROFIT (%)', minval=0, step=0.25)
 
-float step = input.float(0.05, "Radius Step", step = 0.001)
-float multi = input.float(2.5, "Start Points Distance", step = 0.1)
+float step = input.float(0.05, "Radius Step", step=0.001)
+float multi = input.float(2.5, "Start Points Distance", step=0.1)
 
 bool trend = na
-var float multi1 = 0.
-var float multi2 = 0.
+var float multi1 = 0.0
+var float multi2 = 0.0
 int n = 3
-var float band = 0.
+var float band = 0.0
 
 //---------------------------------------------
 // BAND & TREND CALCULATION
 //---------------------------------------------
-float distance  = ta.sma(math.abs(high-low), 100) * multi
-float distance1 = ta.sma(math.abs(high-low), 100) * 0.2
+float distance = ta.sma(math.abs(high - low), 100) * multi
+float distance1 = ta.sma(math.abs(high - low), 100) * 0.2
 
-if bar_index == 101
+if (bar_index == 101)
     trend := true
     band := low * 0.8
 
-if close < band
+if (close < band)
     trend := false
 
-if close > band
+if (close > band)
     trend := true
 
-if trend[1] == false and ta.change(trend)
+if (trend[1] == false and ta.change(trend))
     band := low - distance
 
-if trend[1] == true and ta.change(trend)
+if (trend[1] == true and ta.change(trend))
     band := high + distance
 
-if bar_index % n == 0 and trend
-    multi1 := 0
+if (bar_index % n == 0 and trend)
+    multi1 := 0.0
     multi2 += step    
     band += distance1 * multi2
 
-if bar_index % n == 0 and not trend
+if (bar_index % n == 0 and not trend)
     multi1 += step
-    multi2 := 0   
+    multi2 := 0.0   
     band -= distance1 * multi1
 
 Sband = ta.sma(band, n)
 
 color = trend ? #54b6d4 : #cf2b2b
 
-band_upper = ta.sma(band + distance*0.5, n)
-band_lower = ta.sma(band - distance*0.5, n)
+band_upper = ta.sma(band + distance * 0.5, n)
+band_lower = ta.sma(band - distance * 0.5, n)
 band1 = trend ? band_upper : band_lower
 
-plot(band1, color = bar_index % 2 == 0 ? color.new(chart.fg_color, 50) : na)
+plot(band1, color=bar_index % 2 == 0 ? color.new(chart.fg_color, 50) : na)
 
-plot1 = plot(ta.change(trend) ? na : Sband, style = plot.style_linebr, color = color.gray)
-plot2 = plot(ta.sma(hl2, 20), display = display.none)
+plot1 = plot(ta.change(trend) ? na : Sband, style=plot.style_linebr, color=color.gray)
+plot2 = plot(ta.sma(hl2, 20), display=display.none)
 
 fill(plot1, plot2, band, ta.sma(hl2, 20), color.new(color, 60), na)
 
 //---------------------------------------------
-// STOCHS BY COWWATSON
+// STOCHASTIC OSCILLATOR BY COWWATSON
 //---------------------------------------------
-length = input.int(defval = 14, title = 'Length', group = "STOCHASTIC OSCILLATOR")
-dLength = input.int(defval = 3, title = 'D Line Length', group = "STOCHASTIC OSCILLATOR")
-upperTrigger = input.int(defval = 80, title = 'Upper Trigger Line', group = "STOCHASTIC OSCILLATOR")
-lowerTrigger = input.int(defval = 20, title = 'Lower Trigger Line', group = "STOCHASTIC OSCILLATOR")
+length = input.int(defval=14, title='Length', group="STOCHASTIC OSCILLATOR")
+dLength = input.int(defval=3, title='D Line Length', group="STOCHASTIC OSCILLATOR")
+upperTrigger = input.int(defval=80, title='Upper Trigger Line', group="STOCHASTIC OSCILLATOR")
+lowerTrigger = input.int(defval=20, title='Lower Trigger Line', group="STOCHASTIC OSCILLATOR")
+
 lowVal = ta.lowest(low, length)
 highVal = ta.highest(high, length)
 slowK = (close - lowVal) / (highVal - lowVal) * 100
 fastD = ta.sma(slowK, dLength)
 
 entry_long_mkt_conditions = (
-     slowK <= 10
-     and fastD <= 10
+     slowK <= 12.5 - close / 125
+     and fastD <= 12.5 - close / 125
      and (ta.crossunder(slowK, fastD) 
      or ta.crossover(slowK, fastD))
      ) and barstate.isconfirmed
 
 exit_long_mkt_conditions = (
-     slowK >= 90
-     and fastD >= 90
+     slowK >= 87.5 + close / 125
+     and fastD >= 87.5 + close / 125
      and (ta.crossunder(slowK, fastD) 
      or ta.crossover(slowK, fastD))
      ) and barstate.isconfirmed
@@ -103,25 +104,30 @@ var int reentry = 0
 
 var float tp_factor = (1 + tp / 100)
 var float sl_factor = (1 - tp / 100)
-var float price_factor = 0
+var float price_factor = 0.0
 
-if entry_long_mkt_conditions and not trend and strategy.opentrades == 0
+if (entry_long_mkt_conditions and not trend and strategy.opentrades == 0)
     entryPrice := (high + low) / 2
     strategy.entry("L1", strategy.long, math.round(qty_entry / entryPrice))
     price_factor := (math.pow(10, str.length(str.tostring(math.floor(entryPrice)))) - entryPrice) / 500
     exit := 0
     reentry := 0
 
-if close < entryPrice * (sl_factor - price_factor / 100)
+if (close < entryPrice * (sl_factor - price_factor / 100))
     reentry := 1
 
-if reentry == 1 and trend and not exit_long_mkt_conditions and strategy.opentrades == 1
+if (reentry == 1 and trend and not exit_long_mkt_conditions and strategy.opentrades == 1)
     strategy.entry("L2", strategy.long, math.round(qty_reentry / entryPrice))
     exit := 0
+    reentry := 0
 
-if exit_long_mkt_conditions and trend
+if (exit_long_mkt_conditions and not trend)
     exit := 1
 
-if exit == 1 and not trend and strategy.opentrades > 0
-    strategy.exit("CL", "L1", limit = entryPrice * (tp_factor + price_factor / 100))
-    strategy.exit("CL", "L2", limit = entryPrice * (tp_factor + price_factor / 100))
+if (exit == 1 and not trend and strategy.opentrades > 0)
+    strategy.exit("CL", limit=entryPrice * (tp_factor + price_factor / 100))
+else if (exit == 1 and trend and strategy.opentrades > 0)
+    strategy.cancel("CL")
+    exit := 2
+else if (exit == 2 and not trend and strategy.opentrades > 0)
+    strategy.exit("CL", limit=entryPrice * (tp_factor + price_factor / 100))
