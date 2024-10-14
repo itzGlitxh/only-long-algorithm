@@ -6,89 +6,82 @@ strategy(title='TREND-CATCHER [Options]', overlay=true, initial_capital=1000, py
 //---------------------------------------------
 // STRATEGY OVERVIEW
 //---------------------------------------------
-// This script is designed for trading options, focusing solely on currnt trends.
+// This script is designed for trading options, focusing solely on current trends.
 // The strategy is optimized for short time frames, capturing quick movements.
 // It enters positions during favorable conditions and exits based on a time-adjusted take-profit target.
 
 //---------------------------------------------
+// INPUT PARAMETERS
+//---------------------------------------------
+tp = input.float(0.7, 'Take Profit (%)', minval=0, step=0.025)
+step = input.float(0.15, "Radius Step", step=0.001)
+multi = input.float(2, "Start Points Distance", step=0.1)
+
+length = input.int(14, title='Stochastic Length', group="Stochastic Oscillator")
+dLength = input.int(3, title='D Line Length', group="Stochastic Oscillator")
+upperTrigger = input.int(80, title='Upper Trigger Line', group="Stochastic Oscillator")
+lowerTrigger = input.int(20, title='Lower Trigger Line', group="Stochastic Oscillator")
+
+//---------------------------------------------
 // VARIABLES & INITIALIZATION
 //---------------------------------------------
-tp = input.float(0.7, 'TAKE PROFIT (%)', minval=0, step=0.025)
-
-float step = input.float(0.15, "Radius Step", step = 0.001)
-float multi = input.float(2, "Start Points Distance", step = 0.1)
-
+var float multi1 = 0.0
+var float multi2 = 0.0
+var float band = 0.0
+var int trendSwitch = 0
+var float entryPrice = na
 bool trend = na
-var float multi1 = 0.
-var float multi2 = 0.
+
 int n = 3
-var float band = 0.
 
 //---------------------------------------------
 // BAND & TREND CALCULATION
 //---------------------------------------------
-float distance  = ta.sma(math.abs(high-low), 100) * multi
+float distance = ta.sma(math.abs(high-low), 100) * multi
 float distance1 = ta.sma(math.abs(high-low), 100) * 0.2
 
-var int trendSwitch = 0
-var float entryPrice = na
-
-if bar_index == 101
+if (bar_index == 101)
     trend := true
     band := low * 0.8
 
-if close < band
-    trend := false
+trend := (close > band ? true : (close < band ? false : trend))
 
-if close > band
-    trend := true
+if (trend[1] != trend)
+    band := trend ? (low - distance) : (high + distance)
+    trendSwitch += 1
 
-if trend[1] == false and ta.change(trend)
-    band := low - distance
-    trendSwitch := trendSwitch+1
+if (bar_index % n == 0)
+    if (trend)
+        multi1 := 0
+        multi2 += step    
+        band += distance1 * multi2
+    else
+        multi1 += step
+        multi2 := 0   
+        band -= distance1 * multi1
 
-if trend[1] == true and ta.change(trend)
-    band := high + distance
-    trendSwitch := trendSwitch+1
+float Sband = ta.sma(band, n)
+color trendColor = trend ? #54b6d4 : #cf2b2b
 
-if bar_index % n == 0 and trend
-    multi1 := 0
-    multi2 += step    
-    band += distance1 * multi2
-
-if bar_index % n == 0 and not trend
-    multi1 += step
-    multi2 := 0   
-    band -= distance1 * multi1
-
-Sband = ta.sma(band, n)
-
-color = trend ? #54b6d4 : #cf2b2b
-
-band_upper = ta.sma(band + distance*0.5, n)
-band_lower = ta.sma(band - distance*0.5, n)
-band1 = trend ? band_upper : band_lower
+float bandUpper = ta.sma(band + distance * 0.5, n)
+float bandLower = ta.sma(band - distance * 0.5, n)
+float band1 = trend ? bandUpper : bandLower
 
 plot(band1, color = bar_index % 2 == 0 ? color.new(chart.fg_color, 50) : na)
+plot1 = plot(ta.change(trend) ? na : Sband, style=plot.style_linebr, color=color.gray)
+plot2 = plot(ta.sma(hl2, 20), display=display.none)
 
-plot1 = plot(ta.change(trend) ? na : Sband, style = plot.style_linebr, color = color.gray)
-plot2 = plot(ta.sma(hl2, 20), display = display.none)
-
-fill(plot1, plot2, band, ta.sma(hl2, 20), color.new(color, 60), na)
+fill(plot1, plot2, band, ta.sma(hl2, 20), color.new(trendColor, 60), na)
 
 //---------------------------------------------
-// STOCHS BY COWWATSON (ALTERED BY TP)
+// STOCHASTIC OSCILLATOR
 //---------------------------------------------
-length = input.int(defval = 14, title = 'Length', group = "STOCHASTIC OSCILLATOR")
-dLength = input.int(defval = 3, title = 'D Line Length', group = "STOCHASTIC OSCILLATOR")
-upperTrigger = input.int(defval = 80, title = 'Upper Trigger Line', group = "STOCHASTIC OSCILLATOR")
-lowerTrigger = input.int(defval = 20, title = 'Lower Trigger Line', group = "STOCHASTIC OSCILLATOR")
 lowVal = ta.lowest(low, length)
 highVal = ta.highest(high, length)
 slowK = (close - lowVal) / (highVal - lowVal) * 100
 fastD = ta.sma(slowK, dLength)
 
-var float tp2 = ((tp - (upperTrigger+lowerTrigger)/200)/2)*100
+float tp2 = ((tp - (upperTrigger + lowerTrigger) / 200) / 2) * 100
 
 entry_long_mkt_conditions = (
      slowK <= (upperTrigger+lowerTrigger)/2 + tp2
@@ -123,60 +116,48 @@ exit_short_mkt_conditions = (
 //---------------------------------------------
 var int entry = 0
 var int exit = 0
-var int entry_day = na
+var int entryDay = na
 
-time_check = (hour < 10) or (hour == 10 and minute <= 30)
-no_open_trades = strategy.opentrades == 0
-call_conditions = entry == 3 and entry_long_mkt_conditions and trend and low > Sband + 0.85
-put_conditions = entry == 4 and entry_short_mkt_conditions and not trend and high < Sband - 0.85
+timeCheck = (hour < 10) or (hour == 10 and minute <= 30)
+noOpenTrades = strategy.opentrades == 0
+callConditions = (entry == 3) and entry_long_mkt_conditions and trend and (low > Sband + 0.85)
+bool putConditions = (entry == 4) and entry_short_mkt_conditions and not trend and (high < Sband - 0.85)
 
-var float price_factor = math.pow(10, str.length(str.tostring(math.floor(entryPrice)))) * 100
-
-theta_decay_factor(entry_day, entryPrice, current_day) =>
-    decay_days_passed = current_day - entry_day
-    decay_rate = 6.75/entryPrice
-    theta_decay = 1.0 - math.exp(-decay_rate * decay_days_passed)
-    theta_decay
-
-if hour == 9 and minute <= 45
+if (hour == 9 and minute <= 45)
     trendSwitch := 0
 
-if trendSwitch == 1
-    if trend
-        entry := 1
-    else if not trend
-        entry := 2
+if (trendSwitch == 1)
+    entry := trend ? 1 : 2
 
-if hour == 9 and minute == 45
-    if entry == 1
-        entry := 3
-    else if entry == 2
-        entry := 4
+if (hour == 9 and minute == 45)
+    entry := (entry == 1) ? 3 : (entry == 2 ? 4 : entry)
 
-if call_conditions and no_open_trades and time_check
+if (callConditions and noOpenTrades and timeCheck)
     strategy.entry('Buy Call', strategy.long, 14 + (dayofweek(time) - 2) * 7)
     entryPrice := (high + low) / 2
-    entry_day := dayofweek(time)
+    entryDay := dayofweek(time)
     entry := 0
 
-if put_conditions and no_open_trades and time_check
+if (putConditions and noOpenTrades and timeCheck)
     strategy.entry('Buy Put', strategy.short, 14 + (dayofweek(time) - 2) * 7)
     entryPrice := (high + low) / 2
-    entry_day := dayofweek(time)
+    entryDay := dayofweek(time)
     entry := 0
 
-if not trend or exit_long_mkt_conditions
-    exit := 1
+float priceFactor = math.pow(10, str.length(str.tostring(math.floor(entryPrice)))) * 100
 
-if exit == 1 or entryPrice > 300 or entryPrice < 100
-    theta_adjustment = theta_decay_factor(entry_day, entryPrice, dayofweek(time))
-    tp_limit = entryPrice * (1 + (0.0099 - entryPrice / price_factor) + theta_adjustment)
-    strategy.exit('Sell Call', 'Buy Call', limit = tp_limit)
+thetaDecayFactor(entryDay, entryPrice, currentDay) =>
+    int decayDays = currentDay - entryDay
+    float decayRate = 6.75 / entryPrice
+    float thetaDecay = 1.0 - math.exp(-decayRate * decayDays)
+    thetaDecay
 
-if trend or exit_short_mkt_conditions
-    exit := 2
+if (exit_long_mkt_conditions or entryPrice > 300 or entryPrice < 100)
+    float thetaAdj = thetaDecayFactor(entryDay, entryPrice, dayofweek(time))
+    float tpLimit = entryPrice * (1 + (0.0099 - entryPrice / priceFactor) + thetaAdj)
+    strategy.exit('Sell Call', 'Buy Call', limit=tpLimit)
 
-if exit == 2 or entryPrice > 300 or entryPrice < 100
-    theta_adjustment = theta_decay_factor(entry_day, entryPrice, dayofweek(time))
-    tp_limit = entryPrice * (1 - (0.0099 - entryPrice / price_factor) / 2 - theta_adjustment)
-    strategy.exit('Sell Put', 'Buy Put', limit = tp_limit)
+if (exit_short_mkt_conditions or entryPrice > 300 or entryPrice < 100)
+    float thetaAdj = thetaDecayFactor(entryDay, entryPrice, dayofweek(time))
+    float tpLimit = entryPrice * (1 - (0.0099 - entryPrice / priceFactor) / 2 - thetaAdj)
+    strategy.exit('Sell Put', 'Buy Put', limit=tpLimit)
