@@ -1,7 +1,8 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 
 //@version=5
-strategy(title='LONG-TRADING [15m]', overlay=true, initial_capital=3600, default_qty_type=strategy.cash, default_qty_value=3600, pyramiding=2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
+var int qty = 3600
+strategy(title='LONG-TRADING [15m]', overlay=true, initial_capital=qty, default_qty_type=strategy.cash, default_qty_value=qty, pyramiding=2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
 
 //---------------------------------------------
 // VARIABLES & INITIALIZATION
@@ -77,16 +78,22 @@ highVal = ta.highest(high, length)
 slowK = (close - lowVal) / (highVal - lowVal) * 100
 fastD = ta.sma(slowK, dLength)
 
+var float stochLow = 12.5
+var float stochHigh = 87.5
+
+var float adjustment = close / 125
+entryOffset = (100 + stochHigh + tp - close > 0) ? math.sqrt(math.abs(200 + stochLow + tp - close) / 100) * 10 : 0
+
 entry_long_mkt_conditions = (
-     slowK <= 12.5 - close / 125
-     and fastD <= 12.5 - close / 125
+     slowK <= stochLow - adjustment + entryOffset
+     and fastD <= stochLow - adjustment + entryOffset
      and (ta.crossunder(slowK, fastD) 
      or ta.crossover(slowK, fastD))
      ) and barstate.isconfirmed
 
 exit_long_mkt_conditions = (
-     slowK >= 87.5 + close / 125
-     and fastD >= 87.5 + close / 125
+     slowK >= stochHigh + adjustment
+     and fastD >= stochHigh + adjustment
      and (ta.crossunder(slowK, fastD) 
      or ta.crossover(slowK, fastD))
      ) and barstate.isconfirmed
@@ -94,11 +101,12 @@ exit_long_mkt_conditions = (
 //---------------------------------------------
 // STRATEGY EXECUTION
 //---------------------------------------------
-var int qty = 3600
 var int qty_entry = 7 * qty / 12
 var int qty_reentry = 5 * qty / 12
 
-var float entryPrice = na
+var float entryPrice = 0.0
+var float limitExitPrice = 0.0
+var float stopLossPrice = 0.0
 var int exit = 0
 var int reentry = 0
 
@@ -108,8 +116,10 @@ var float price_factor = 0.0
 
 if (entry_long_mkt_conditions and not trend and strategy.opentrades == 0)
     entryPrice := (high + low) / 2
-    strategy.entry("L1", strategy.long, math.round(qty_entry / entryPrice))
-    price_factor := (math.pow(10, str.length(str.tostring(math.floor(entryPrice)))) - entryPrice) / 500
+    price_factor := math.sqrt(math.abs(225 - entryPrice) / 100) + ((225 - entryPrice > 0) ? 0.5 : -0.5)
+    limitExitPrice := math.round(entryPrice * (tp_factor + price_factor / 100), 2)
+    stopLossPrice := math.round(entryPrice * (sl_factor - price_factor / 100), 2)
+    strategy.entry("L1 | " + str.tostring(limitExitPrice) + " | " + str.tostring(stopLossPrice), strategy.long, math.round(qty_entry / entryPrice))
     exit := 0
     reentry := 0
 
@@ -117,7 +127,7 @@ if (close < entryPrice * (sl_factor - price_factor / 100))
     reentry := 1
 
 if (reentry == 1 and trend and not exit_long_mkt_conditions and strategy.opentrades == 1)
-    strategy.entry("L2", strategy.long, math.round(qty_reentry / entryPrice))
+    strategy.entry("L2 | " + str.tostring(limitExitPrice), strategy.long, math.round(qty_reentry / entryPrice))
     exit := 0
     reentry := 0
 
