@@ -82,7 +82,7 @@ var float stochLow = 12.5
 var float stochHigh = 87.5
 
 var float adjustment = close / 125
-entryOffset = (100 + stochHigh + tp - close > 0) ? math.sqrt(math.abs(200 + stochLow + tp - close) / 100) * 10 : 0
+entryOffset = (200 - stochLow + tp - close > 0) ? math.sqrt(math.abs(200 + stochLow + tp - close) / 100) * 10 : 0
 
 entry_long_mkt_conditions = (
      slowK <= stochLow - adjustment + entryOffset
