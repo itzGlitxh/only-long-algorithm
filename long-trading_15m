@@ -1,7 +1,7 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 
 //@version=5
-var int qty = 3600
+var int qty = 3300
 strategy(title='LONG-TRADING [15m]', overlay=true, initial_capital=qty, default_qty_type=strategy.cash, default_qty_value=qty, pyramiding=2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
 
 //---------------------------------------------
@@ -117,7 +117,7 @@ if (entry_long_mkt_conditions[1] and not trend[1] and strategy.opentrades[1] == 
 
 if entry_long_mkt_conditions and not trend and strategy.opentrades == 0
     entryPrice := (high + low) / 2
-    price_factor := (math.sqrt(math.abs(250 - entryPrice) / 100) + (250 < entryPrice ? -0.5 : 0)) / 100
+    price_factor := (-tp/2 + math.sqrt(math.abs(250 - entryPrice) / tp) + (250 < entryPrice ? -tp/5 : 0)) / 100
     limitExitPrice := math.round(entryPrice * (tp_factor + price_factor), 2)
     stopLossPrice := math.round(entryPrice * (sl_factor - price_factor + (500 < entryPrice ? tp / 250 : -tp / 500)), 2)
     strategy.entry("L1 | " + str.tostring(limitExitPrice) + " | " + str.tostring(stopLossPrice), strategy.long, math.round(qty_entry / entryPrice))
@@ -137,15 +137,18 @@ if exit_long_mkt_conditions and not trend
     exitStage := 1
 
 if exitStage == 1 and not trend and strategy.opentrades > 0
-    strategy.exit("CL", limit=limitExitPrice)
+    strategy.exit("CL", limit=limitExitPrice, stop=stopLossPrice/2)
     if lastAction != "exit_created" and close[1] > limitExitPrice * 0.95
-        label.new(bar_index[1], close[1] + 0.5, "Limit: " + str.tostring(math.round(close[1] + (500 - entryPrice) / 250, 2)), style=label.style_label_down, color=color.new(color.orange, 0), textcolor=color.white)
+        label.new(bar_index[1], close[1] + 0.5, "Limit: " + str.tostring(math.round(close[1]+0.4 + (500 - entryPrice) / 250, 0)), style=label.style_label_down, color=color.new(color.orange, 0), textcolor=color.white)
         lastAction := "exit_created"
 else if exitStage == 1 and trend and strategy.opentrades > 0
     strategy.cancel("CL")
     exitStage := 2
+    if lastAction == "exit_created"
+        label.new(bar_index[1], close[1] + 0.5, "Limit Order Cancelled", style=label.style_xcross, color=color.new(color.red, 0), textcolor=color.white)
+        lastAction := "exit_cancelled"
 else if exitStage == 2 and not trend and strategy.opentrades > 0
-    strategy.exit("CL", limit=limitExitPrice)
+    strategy.exit("CL", limit=limitExitPrice, stop=stopLossPrice/2)
     if lastAction != "exit_created" and close[1] > limitExitPrice * 0.95
-        label.new(bar_index[1], close[1] + 0.5, "Limit: " + str.tostring(math.round(limitExitPrice + (500 - entryPrice) / 250, 2)), style=label.style_label_down, color=color.new(color.orange, 0), textcolor=color.white)
+        label.new(bar_index[1], close[1] + 0.5, "Limit: " + str.tostring(math.round(limitExitPrice+0.4 + (500 - entryPrice) / 250, 0)), style=label.style_label_down, color=color.new(color.orange, 0), textcolor=color.white)
         lastAction := "exit_created"
