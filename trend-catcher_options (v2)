@@ -6,7 +6,7 @@ strategy(title='TREND-CATCHER [Options] v2', overlay=true, initial_capital=1000,
 //---------------------------------------------
 // INPUT PARAMETERS
 //---------------------------------------------
-tp = input.float(0.6, 'Take Profit (%)', minval=0, step=0.025)
+tp = input.float(0.7, 'Take Profit (%)', minval=0, step=0.025)
 step = input.float(0.15, "Radius Step", step=0.001)
 multi = input.float(2, "Start Points Distance", step=0.1)
 
@@ -112,10 +112,10 @@ if (hour == 9 and minute == 45)
     entry := (entry == 1) ? 3 : (entry == 2 ? 4 : entry)
 
 if (callConditions[1] and noOpenTrades[1] and timeCheck[1])
-    label.new(x=bar_index[1], y=low[1] - 0.5, text="Upcoming Buy Call", color=color.new(color.green, 0), style=label.style_label_up, textcolor=color.white)
+    label.new(x=bar_index[2], y=low[2] - 0.5, text="Potential Buy Call", color=color.new(color.green, 0), style=label.style_label_up, textcolor=color.white)
 
 if (putConditions[1] and noOpenTrades[1] and timeCheck[1])
-    label.new(x=bar_index[1], y=high[1] + 0.5, text="Upcoming Buy Put", color=color.new(color.red, 0), style=label.style_label_down, textcolor=color.white)
+    label.new(x=bar_index[2], y=high[2] + 0.5, text="Potential Buy Put", color=color.new(color.red, 0), style=label.style_label_down, textcolor=color.white)
 
 if (callConditions and noOpenTrades and timeCheck)
     strategy.entry('Buy Call', strategy.long, 14 + (dayofweek(time) - 2) * 7)
@@ -141,12 +141,12 @@ if (short_mkt_conditions or entryPrice > 300 or entryPrice < 100) and (not noOpe
     float thetaAdj = thetaDecayFactor(entryDay, entryPrice, dayofweek(time))
     float tpLimit = entryPrice * (1 + (0.0099 - entryPrice / priceFactor) + thetaAdj)
     if close[1] > tpLimit * (1 - (0.0099 - entryPrice / priceFactor) - thetaAdj)
-        label.new(x=bar_index[1], y=high[1] + 0.5, text="Upcoming Sell Call", color=color.new(color.orange, 0), style=label.style_label_down, textcolor=color.white)
+        label.new(x=bar_index[1], y=high[1] + 0.5, text="Potential Sell Call", color=color.new(color.orange, 0), style=label.style_label_down, textcolor=color.white)
     strategy.exit('Sell Call', 'Buy Call', limit=tpLimit)
 
 if (long_mkt_conditions or entryPrice > 300 or entryPrice < 100) and (not noOpenTrades)
     float thetaAdj = thetaDecayFactor(entryDay, entryPrice, dayofweek(time))
     float tpLimit = entryPrice * (1 - (0.0099 - entryPrice / priceFactor) / 2 - thetaAdj)
     if close[1] < tpLimit * (1 + (0.0099 - entryPrice / priceFactor) / 2 + thetaAdj)
-        label.new(x=bar_index[1], y=low[1] - 0.5, text="Upcoming Sell Put", color=color.new(color.purple, 0), style=label.style_label_up, textcolor=color.white)
+        label.new(x=bar_index[1], y=low[1] - 0.5, text="Potential Sell Put", color=color.new(color.purple, 0), style=label.style_label_up, textcolor=color.white)
     strategy.exit('Sell Put', 'Buy Put', limit=tpLimit)
