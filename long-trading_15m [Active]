@@ -95,6 +95,32 @@ exit_long_mkt_conditions = (
      ) and barstate.isconfirmed
 
 //---------------------------------------------
+// CALCULATION OF RISK-ADJUSTED RETURN (Sharpe Ratio)
+//---------------------------------------------
+
+annualRiskFreeRate = input.float(0.02, 'Annual Risk-Free Rate', minval=0, step=0.001)
+monthlyRiskFreeRate = (annualRiskFreeRate / 12) * 10
+
+lookbackPeriod = 200
+
+logReturns = math.log(close / close[lookbackPeriod])
+volatility = ta.stdev(logReturns, lookbackPeriod)
+annualizedVolatility = volatility * math.sqrt(10)
+
+profitRate = strategy.netprofit_percent / 100
+
+sharpeRatio = (profitRate - monthlyRiskFreeRate) / annualizedVolatility
+
+var label sharpeLabel = na
+
+if (bar_index % 10 == 0)
+    if (na(sharpeLabel))
+        sharpeLabel := label.new(x=bar_index, y=high, text="Sharpe Ratio: " + str.tostring(sharpeRatio, "#.##"), style=label.style_label_up, color=color.black, textcolor=color.white, size=size.normal, xloc=xloc.bar_index, yloc=yloc.price)
+    else
+        label.set_xy(sharpeLabel, bar_index, high)
+        label.set_text(sharpeLabel, "Sharpe Ratio: " + str.tostring(sharpeRatio, "#.##"))
+
+//---------------------------------------------
 // STRATEGY EXECUTION
 //---------------------------------------------
 var int qty_entry = 7 * qty / 12
@@ -142,7 +168,7 @@ if exitStage == 1 and not trend and strategy.opentrades > 0
         label.new(bar_index[1], close[1] + 0.5, "Limit: " + str.tostring(math.round(close[1]+0.4 + (500 - entryPrice) / 250, 0)), style=label.style_label_down, color=color.new(color.orange, 0), textcolor=color.white)
         lastAction := "exit_created"
 else if exitStage == 1 and trend and strategy.opentrades > 0
-    strategy.cancel("CL")
+    strategy.cancel_all()
     exitStage := 2
     if lastAction == "exit_created"
         label.new(bar_index[1], close[1] + 0.5, "Limit Order Cancelled", style=label.style_xcross, color=color.new(color.red, 0), textcolor=color.white)
