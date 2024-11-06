@@ -115,9 +115,9 @@ var label sharpeLabel = na
 
 if (bar_index % 10 == 0)
     if (na(sharpeLabel))
-        sharpeLabel := label.new(x=bar_index, y=high, text="Sharpe Ratio: " + str.tostring(sharpeRatio, "#.##"), style=label.style_label_up, color=color.black, textcolor=color.white, size=size.normal, xloc=xloc.bar_index, yloc=yloc.price)
+        sharpeLabel := label.new(x=bar_index, y=low, text="Sharpe Ratio: " + str.tostring(sharpeRatio, "#.##"), style=label.style_label_up, color=color.black, textcolor=color.white, size=size.normal, xloc=xloc.bar_index, yloc=yloc.price)
     else
-        label.set_xy(sharpeLabel, bar_index, high)
+        label.set_xy(sharpeLabel, bar_index, low)
         label.set_text(sharpeLabel, "Sharpe Ratio: " + str.tostring(sharpeRatio, "#.##"))
 
 //---------------------------------------------
