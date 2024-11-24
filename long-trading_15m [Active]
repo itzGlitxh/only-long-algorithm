@@ -110,36 +110,25 @@ profitRate = strategy.netprofit_percent / 100
 
 sharpeRatio = (profitRate - annualRiskFreeRate) / tenMonthVolatility
 
-var string termIndicator = ""
-
-if sharpeRatio > 2.5
-    termIndicator := "Long & Short Term Trade"
-else if sharpeRatio > 1.75
-    termIndicator := "Short Term Trade"
-else if sharpeRatio > 1
-    termIndicator := "Long Term Trade"
-else
-    termIndicator := "No Trade"
-
 var label sharpeLabel = na
 
 if (na(sharpeLabel))
-    sharpeLabel := label.new(x=bar_index, y=low, text="Sharpe Ratio: " + str.tostring(sharpeRatio, "#.##") + "\n" + termIndicator, style=label.style_label_up, color=color.black, textcolor=color.white, size=size.normal, xloc=xloc.bar_index, yloc=yloc.price)
+    sharpeLabel := label.new(x=bar_index, y=low, text="Sharpe Ratio: " + str.tostring(sharpeRatio, "#.##"), style=label.style_label_up, color=color.black, textcolor=color.white, size=size.normal, xloc=xloc.bar_index, yloc=yloc.price)
 else
     label.set_xy(sharpeLabel, bar_index, low)
-    label.set_text(sharpeLabel, "Sharpe Ratio: " + str.tostring(sharpeRatio, "#.##") + "\n" + termIndicator)
+    label.set_text(sharpeLabel, "Sharpe Ratio: " + str.tostring(sharpeRatio, "#.##"))
 
 //---------------------------------------------
 // STRATEGY EXECUTION
 //---------------------------------------------
-var int qty_entry = 7 * qty / 12
-var int qty_reentry = 5 * qty / 12
+var float qty_entry = 7 * qty / 12
+var float qty_reentry = na
 
 var float entryPrice = na
 var float limitExitPrice = na
 var float stopLossPrice = na
-var int exitStage = 0
-var int reentryStage = 0
+var int exitStage = na
+var int reentryStage = na
 
 var float tp_factor = 1 + tp / 100
 var float sl_factor = 1 - tp / 100
@@ -149,32 +138,41 @@ var float split_factor = na
 var string lastAction = ""
 
 if (entry_long_mkt_conditions[1] and not trend[1] and strategy.opentrades[1] == 0)
-    label.new(bar_index[1], close[1] - 0.5, "Upcoming Entry", style=label.style_label_up, color=color.new(color.green, 0), textcolor=color.white)
+    a = -2.5 / 10000
+    entry_value = if close[1] <= 250 and close[1] >= 100
+        math.floor(close[1] + a * math.pow(close[1] - 250, 2))
+    else if close[1] >= 500
+        math.floor(close[1] + a * math.pow(close[1] - 500, 2))
+    else if close[1] > 250 and close[1] < 500
+        math.floor(close[1])
+    else
+        close[1]
+    label.new(bar_index[1], close[1] - 0.5, "Upcoming Entry | " + str.tostring(math.round(entry_value, 3 - str.length(str.tostring(int(close[1]))))), style=label.style_label_up, color=color.new(color.green, 0), textcolor=color.white)
 
 if entry_long_mkt_conditions and not trend and strategy.opentrades == 0
     entryPrice := (high + low) / 2
     split_factor := math.pow(10, str.length(str.tostring(int(entryPrice))) - 1)
     price_factor := (-tp/2 + math.sqrt(math.abs(2.5 * split_factor - entryPrice) / tp) + (2.5 * split_factor < entryPrice ? -tp / 5 : 0)) / 100
     limitExitPrice := math.round(entryPrice * (tp_factor + price_factor), 2)
-    stopLossPrice := math.round(entryPrice * (sl_factor - price_factor + (5 * split_factor < entryPrice ? tp / 250 : -tp / 500)), 2)
+    stopLossPrice := math.round(entryPrice * (sl_factor - price_factor + (5 * split_factor < entryPrice ? tp / (250 - 2.5 * math.log(entryPrice)) : -tp / (500 + 5 * math.log(entryPrice)))), 2)
     strategy.entry("L1 | " + str.tostring(limitExitPrice) + " | " + str.tostring(stopLossPrice), strategy.long, math.round(qty_entry / entryPrice))
+    qty_reentry := qty - entryPrice * math.round(qty_entry / entryPrice)
     exitStage := 0
     reentryStage := 0
     lastAction := ""
 
-if close < stopLossPrice
+if close < stopLossPrice and strategy.opentrades == 1
     reentryStage := 1
 
 if reentryStage == 1 and trend and not exit_long_mkt_conditions and strategy.opentrades == 1
     strategy.entry("L2 | " + str.tostring(limitExitPrice), strategy.long, math.round(qty_reentry / entryPrice))
-    reentryStage := 0
     lastAction := ""
 
 if exit_long_mkt_conditions and not trend
     exitStage := 1
 
 if exitStage == 1 and not trend and strategy.opentrades > 0
-    strategy.exit("CL", limit=limitExitPrice, stop=stopLossPrice/1.5)
+    strategy.exit("CL", limit=limitExitPrice, stop=stopLossPrice/2.5)
     if lastAction != "exit_created" and close[1] > limitExitPrice * 0.95
         label.new(bar_index[1], close[1] + 0.5, "Limit: " + str.tostring(math.ceil(close[1] + (5 * split_factor - entryPrice) / (2.5 * split_factor))), style=label.style_label_down, color=color.new(color.orange, 0), textcolor=color.white)
         lastAction := "exit_created"
@@ -185,7 +183,7 @@ else if exitStage == 1 and trend and strategy.opentrades > 0
         label.new(bar_index[1], close[1], "Limit Order Cancelled", style=label.style_xcross, color=color.new(color.red, 0), textcolor=color.white)
         lastAction := "exit_cancelled"
 else if exitStage == 2 and not trend and strategy.opentrades > 0
-    strategy.exit("CL", limit=limitExitPrice, stop=stopLossPrice/1.5)
+    strategy.exit("CL", limit=limitExitPrice, stop=stopLossPrice/2.5)
     if lastAction != "exit_created" and close[1] > limitExitPrice * 0.95
         label.new(bar_index[1], close[1] + 0.5, "Limit: " + str.tostring(math.ceil(close[1] + (5 * split_factor - entryPrice) / (2.5 * split_factor))), style=label.style_label_down, color=color.new(color.orange, 0), textcolor=color.white)
         lastAction := "exit_created"
