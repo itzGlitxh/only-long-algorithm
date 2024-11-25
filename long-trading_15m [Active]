@@ -154,7 +154,7 @@ if entry_long_mkt_conditions and not trend and strategy.opentrades == 0
     split_factor := math.pow(10, str.length(str.tostring(int(entryPrice))) - 1)
     price_factor := (-tp/2 + math.sqrt(math.abs(2.5 * split_factor - entryPrice) / tp) + (2.5 * split_factor < entryPrice ? -tp / 5 : 0)) / 100
     limitExitPrice := math.round(entryPrice * (tp_factor + price_factor), 2)
-    stopLossPrice := math.round(entryPrice * (sl_factor - price_factor + (5 * split_factor < entryPrice ? tp / (250 - 2.5 * math.log(entryPrice)) : -tp / (500 + 5 * math.log(entryPrice)))), 2)
+    stopLossPrice := math.round(entryPrice * (sl_factor - price_factor + (5 * split_factor < entryPrice ? tp / (250 - 5 * math.log(entryPrice)) : -tp / (500 + 5 * math.log(entryPrice)))), 2)
     strategy.entry("L1 | " + str.tostring(limitExitPrice) + " | " + str.tostring(stopLossPrice), strategy.long, math.round(qty_entry / entryPrice))
     qty_reentry := qty - entryPrice * math.round(qty_entry / entryPrice)
     exitStage := 0
