@@ -1,8 +1,9 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// Based on https://www.tradingview.com/v/4KIHf36j/
 
 //@version=5
-var int qty = 3300
-strategy(title='LONG-TRADING [15m]', overlay=true, initial_capital=qty, default_qty_type=strategy.cash, default_qty_value=qty, pyramiding=2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
+var int qty = 4200
+strategy(title='TREND-CATCHER [15m]', overlay=true, initial_capital=qty, default_qty_type=strategy.cash, default_qty_value=qty, pyramiding=2, commission_type=strategy.commission.cash_per_order, commission_value=0.15)
 
 //---------------------------------------------
 // VARIABLES & INITIALIZATION
@@ -127,17 +128,21 @@ var float qty_reentry = na
 var float entryPrice = na
 var float limitExitPrice = na
 var float stopLossPrice = na
-var int exitStage = na
-var int reentryStage = na
 
 var float tp_factor = 1 + tp / 100
 var float sl_factor = 1 - tp / 100
 var float price_factor = na
 var float split_factor = na
+var float sl_price_adjustment = na
 
-var string lastAction = ""
+var int exitStage = 0
+var bool reentryStage = false
+var bool exitLabelCreated = false
 
-if (entry_long_mkt_conditions[1] and not trend[1] and strategy.opentrades[1] == 0)
+var bool entryLabel = false
+var bool reentryLabel = false
+
+if (entry_long_mkt_conditions[1] and not trend[1] and strategy.opentrades[1] == 0 and bar_index[1] > 101)
     a = -2.5 / 10000
     entry_value = if close[1] <= 250 and close[1] >= 100
         math.floor(close[1] + a * math.pow(close[1] - 250, 2))
@@ -147,43 +152,53 @@ if (entry_long_mkt_conditions[1] and not trend[1] and strategy.opentrades[1] == 
         math.floor(close[1])
     else
         close[1]
-    label.new(bar_index[1], close[1] - 0.5, "Upcoming Entry | " + str.tostring(math.round(entry_value, 3 - str.length(str.tostring(int(close[1]))))), style=label.style_label_up, color=color.new(color.green, 0), textcolor=color.white)
+    if not entryLabel
+        label.new(bar_index[1], close[1] - 0.5, "Upcoming Entry | " + str.tostring(math.round(entry_value, 3 - str.length(str.tostring(int(close[1]))))), style=label.style_label_up, color=color.new(color.green, 0), textcolor=color.white)
+        entryLabel := true
 
-if entry_long_mkt_conditions and not trend and strategy.opentrades == 0
+if entry_long_mkt_conditions and not trend and strategy.opentrades == 0 and bar_index > 101
     entryPrice := (high + low) / 2
     split_factor := math.pow(10, str.length(str.tostring(int(entryPrice))) - 1)
-    price_factor := (-tp/2 + math.sqrt(math.abs(2.5 * split_factor - entryPrice) / tp) + (2.5 * split_factor < entryPrice ? -tp / 5 : 0)) / 100
+    price_factor := (-tp/2 + math.sqrt(math.abs(2.5 * split_factor - entryPrice) / tp) - tp / 5) / 100
     limitExitPrice := math.round(entryPrice * (tp_factor + price_factor), 2)
-    stopLossPrice := math.round(entryPrice * (sl_factor - price_factor + (5 * split_factor < entryPrice ? tp / (250 - 5 * math.log(entryPrice)) : -tp / (500 + 5 * math.log(entryPrice)))), 2)
+    sl_price_adjustment := math.min(2.5 , math.min(2.5 * math.exp((-250 + entryPrice) / (tp * 10)) - 0.5, 2.5 * math.exp((500 - entryPrice) / (tp * 10)) - 0.5))
+    stopLossPrice := math.round(entryPrice * (sl_factor - price_factor + (entryPrice > 5 * split_factor ? tp / (250 - 5 * math.log(entryPrice)) : -tp / (500 + 10 * math.log(entryPrice)))) + sl_price_adjustment, 2)
+    
     strategy.entry("L1 | " + str.tostring(limitExitPrice) + " | " + str.tostring(stopLossPrice), strategy.long, math.round(qty_entry / entryPrice))
     qty_reentry := qty - entryPrice * math.round(qty_entry / entryPrice)
     exitStage := 0
-    reentryStage := 0
-    lastAction := ""
+    reentryStage := false
+    reentryLabel := false
+    exitLabelCreated := false
 
 if close < stopLossPrice and strategy.opentrades == 1
-    reentryStage := 1
+    reentryStage := true
 
-if reentryStage == 1 and trend and not exit_long_mkt_conditions and strategy.opentrades == 1
+if (reentryStage[1] and trend[1] and not exit_long_mkt_conditions[1] and strategy.opentrades[1] == 1)
+    entry_value = if math.abs(open[1] - close[1]) >= 1
+        close[1] - close[1] / split_factor
+    else
+        close[1]
+    if not reentryLabel
+        label.new(bar_index[1], close[1] - 0.5, "Upcoming ReEntry | " + str.tostring(math.round(entry_value, 3 - str.length(str.tostring(int(close[1]))))), style=label.style_label_up, color=color.new(color.blue, 0), textcolor=color.white)
+        reentryLabel := true
+
+if reentryStage and trend and not exit_long_mkt_conditions and strategy.opentrades == 1
     strategy.entry("L2 | " + str.tostring(limitExitPrice), strategy.long, math.round(qty_reentry / entryPrice))
-    lastAction := ""
+    entryLabel := false
+    exitLabelCreated := false
 
 if exit_long_mkt_conditions and not trend
     exitStage := 1
 
-if exitStage == 1 and not trend and strategy.opentrades > 0
-    strategy.exit("CL", limit=limitExitPrice, stop=stopLossPrice/2.5)
-    if lastAction != "exit_created" and close[1] > limitExitPrice * 0.95
-        label.new(bar_index[1], close[1] + 0.5, "Limit: " + str.tostring(math.ceil(close[1] + (5 * split_factor - entryPrice) / (2.5 * split_factor))), style=label.style_label_down, color=color.new(color.orange, 0), textcolor=color.white)
-        lastAction := "exit_created"
+if (exitStage == 1 or exitStage == 2) and not trend and strategy.opentrades > 0
+    strategy.exit("CL", limit=limitExitPrice, stop=stopLossPrice/2)
+    if exitLabelCreated == false and close[1] > limitExitPrice * 0.95
+        label.new(bar_index[1], close[1] + 0.5, "Limit: " + str.tostring(math.round(math.max(limitExitPrice, close[1]) + (5 * split_factor - entryPrice) / (2.5 * entryPrice), 3 - str.length(str.tostring(int(close[1]))))), style=label.style_label_down, color=color.new(color.orange, 0), textcolor=color.white)
+        exitLabelCreated := true
 else if exitStage == 1 and trend and strategy.opentrades > 0
     strategy.cancel_all()
     exitStage := 2
-    if lastAction == "exit_created"
+    if exitLabelCreated
         label.new(bar_index[1], close[1], "Limit Order Cancelled", style=label.style_xcross, color=color.new(color.red, 0), textcolor=color.white)
-        lastAction := "exit_cancelled"
-else if exitStage == 2 and not trend and strategy.opentrades > 0
-    strategy.exit("CL", limit=limitExitPrice, stop=stopLossPrice/2.5)
-    if lastAction != "exit_created" and close[1] > limitExitPrice * 0.95
-        label.new(bar_index[1], close[1] + 0.5, "Limit: " + str.tostring(math.ceil(close[1] + (5 * split_factor - entryPrice) / (2.5 * split_factor))), style=label.style_label_down, color=color.new(color.orange, 0), textcolor=color.white)
-        lastAction := "exit_created"
+        exitLabelCreated := false
