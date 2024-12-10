@@ -1,34 +1,35 @@
 # Trend-Catcher [15m]
 
 ## Overview
-Trend-Catcher [15m] is a versatile trading algorithm designed for both short- and long-term trading. It uses trend analysis to execute trades through calls and puts based on dynamic market conditions.
+Trend-Catcher [15m] is an advanced trading algorithm designed for dynamic market conditions. It uses trend analysis to execute both long and short trades based on the Radius Trend indicator and the Stochastic Oscillator.
 
-## Strategy Highlights
-- **Indicators Used**:
-  - **Relative Momentum Index (RMI)**: Tracks momentum through gains/losses comparison.
-  - **Average Directional Index (ADX)**: Measures trend strength.
-  - **Relative Strength Index (RSI)**: Identifies overbought/oversold conditions.
-  - **Ichimoku Cloud**: Provides trend direction, support/resistance, and momentum.
+## Indicators Used
+- **Radius Trend**: Determines market trend direction and adjusts trading bands dynamically.
+- **Stochastic Oscillator**: Identifies overbought and oversold conditions for precise entry and exit points.
 
-- **Execution Logic**:
-  - Trades both long (calls) and short (puts) positions based on confirmed trend shifts.
-  - Dynamic stop-loss and take-profit management for risk control.
+## Execution Logic
+- **Entry Conditions**:
+  - Long Entry: Triggered when the Stochastic Oscillator indicates oversold conditions and the Radius Trend suggests a potential upward reversal.
+  - Re-Entry: If the trend remains bullish after a stop-loss trigger, re-entry occurs based on recalibrated support levels.
 
-- **Trend Adaptability**:
-  - Automatically switches between calls and puts, profiting from bullish and bearish trends.
+- **Exit Conditions**:
+  - Profit Target: Trades close at a pre-defined profit percentage.
+  - Stop Loss: Stops are adjusted based on dynamic support and resistance levels.
 
-- **Initial Capital**: $10,000 with $1,000 allocated per trade.
+- **Trade Management**:
+  - Adjusts trade size, stop loss, and take profit dynamically based on market volatility.
+  - Implements Sharpe Ratio tracking for performance evaluation.
 
 ## Features
-- **Customizable Parameters**: Fully adjustable indicators and risk settings.
-- **Real-Time Alerts**: Instant buy/sell signals on TradingView.
-- **Visual Indicators**: Clear chart visuals for data-driven decisions.
+- **Customizable Parameters**: Adjust trend sensitivity, take profit, and stop-loss levels.
+- **Visual Indicators**: Clear chart visuals for trend shifts and market entries.
+- **Automated Trading Logic**: Executes trades with risk management built-in.
 
 ## Installation
 1. Open TradingView and create a new Pine Script.
 2. Copy and paste the Trend-Catcher code.
 3. Save and apply the script to your chart.
-4. Adjust settings in the input menu.
+4. Adjust settings in the input menu as needed.
 
 ## Disclaimer
-This algorithm is for educational purposes only. Trading involves risk, and thorough research is essential before making financial decisions. The creator assumes no responsibility for losses incurred.
+This algorithm is for educational purposes only. Trading involves significant risk, and thorough research is recommended before making financial decisions. The creator assumes no responsibility for trading outcomes.
